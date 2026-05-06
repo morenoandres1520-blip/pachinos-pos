@@ -21,10 +21,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/pos', label: 'POS', icon: ShoppingCart },
-  { href: '/inventario', label: 'Inventario', icon: Package },
-  { href: '/ventas', label: 'Ventas', icon: Receipt },
-  { href: '/reportes', label: 'Reportes', icon: BarChart3, adminOnly: true },
-  { href: '/ajustes', label: 'Ajustes', icon: Settings, adminOnly: true },
+  { href: '/inventory', label: 'Inventario', icon: Package },
+  { href: '/sales', label: 'Ventas', icon: Receipt },
+  { href: '/reports', label: 'Reportes', icon: BarChart3, adminOnly: true },
+  { href: '/settings', label: 'Ajustes', icon: Settings, adminOnly: true },
 ];
 
 export function BottomNav() {

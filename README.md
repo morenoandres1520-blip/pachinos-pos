@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PaChinos POS - Sistema de Punto de Venta
 
-## Getting Started
+Sistema de punto de venta (POS) para tienda de calzado PaChinos. Aplicación web mobile-first accesible desde el navegador del celular.
 
-First, run the development server:
+## Stack Tecnológico
+
+- **Framework:** Next.js 15 (App Router)
+- **Lenguaje:** TypeScript
+- **Base de datos + Auth:** Supabase
+- **Hosting:** Vercel
+- **Estilos:** Tailwind CSS + shadcn/ui
+- **State management:** Zustand
+- **PDF:** jsPDF
+- **Gráficas:** Recharts
+- **Iconos:** Lucide React
+
+## Requisitos Previos
+
+- Node.js 18+
+- Cuenta en [Supabase](https://supabase.com) (plan gratuito)
+- Cuenta en [Vercel](https://vercel.com) (plan gratuito)
+
+## Configuración Local
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/TU_USUARIO/pachinos-pos.git
+cd pachinos-pos
+npm install
+```
+
+### 2. Configurar Supabase
+
+1. Crear un nuevo proyecto en [Supabase Dashboard](https://app.supabase.com)
+2. Ir a **SQL Editor** y ejecutar el archivo `supabase/migrations/001_initial_schema.sql`
+3. Copiar las credenciales del proyecto:
+   - **Project URL** (Settings > API > Project URL)
+   - **Anon/Public Key** (Settings > API > anon public)
+
+### 3. Variables de entorno
+
+Crear archivo `.env.local` en la raíz:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key-aqui
+```
+
+### 4. Crear usuario admin inicial
+
+En el Dashboard de Supabase > Authentication > Users > Add User:
+- Email: admin@pachinos.com
+- Password: (tu contraseña segura)
+
+Luego en SQL Editor ejecutar:
+```sql
+UPDATE public.profiles
+SET role = 'admin', full_name = 'Administrador'
+WHERE email = 'admin@pachinos.com';
+```
+
+### 5. Ejecutar en desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Despliegue en Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Conectar con GitHub
 
-## Learn More
+1. Subir el código a GitHub
+2. Ir a [vercel.com](https://vercel.com) > New Project
+3. Importar el repositorio desde GitHub
+4. Framework preset: Next.js (se detecta automáticamente)
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Configurar variables de entorno en Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+En Settings > Environment Variables, agregar:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Variable | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL de tu proyecto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key de Supabase |
 
-## Deploy on Vercel
+### 3. Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Vercel desplegará automáticamente con cada push a `main`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura del Proyecto
+
+```
+src/
+├── app/
+│   ├── login/          # Página de login
+│   ├── (dashboard)/
+│   │   ├── pos/        # Punto de venta
+│   │   ├── inventory/  # Inventario
+│   │   ├── sales/      # Historial de ventas
+│   │   ├── reports/    # Reportes (admin)
+│   │   ├── settings/   # Configuración (admin)
+│   │   └── users/      # Gestión usuarios (admin)
+│   └── api/            # API routes
+├── components/
+│   ├── ui/             # shadcn components
+│   ├── pos/            # Componentes POS
+│   ├── invoice/        # Facturación y PDF
+│   ├── inventory/      # Inventario
+│   ├── reports/        # Gráficas
+│   └── layout/         # Layout y navegación
+├── hooks/              # Custom hooks
+├── lib/                # Utilidades
+├── store/              # Zustand stores
+└── types/              # TypeScript types
+```
+
+## Roles
+
+| Rol | Acceso |
+|-----|--------|
+| **Admin** | Acceso total: inventario, reportes, usuarios, configuración, anular ventas |
+| **Cajera** | POS, consulta inventario, sus ventas del día, imprimir facturas |
+
+## Características
+
+- Mobile-first (optimizado para 360-430px)
+- PWA instalable
+- Generación de PDF para facturas
+- Impresión en papel térmico (58mm/80mm)
+- Compartir facturas por WhatsApp
+- Reportes con gráficas
+- Gestión de inventario por talla
+- Alertas de bajo stock
+- Moneda COP con formato colombiano
+- Zona horaria America/Bogota

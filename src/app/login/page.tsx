@@ -42,6 +42,7 @@ export default function LoginPage() {
     }
 
     toast.success('Bienvenido a PaChinos');
+    router.refresh();
     router.push('/pos');
   };
 

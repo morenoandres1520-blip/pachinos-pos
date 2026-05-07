@@ -207,22 +207,14 @@ export function CheckoutDialog({
         .insert(salePayments);
       if (paymentsError) throw new Error(`Error guardando pagos: ${paymentsError.message}`);
 
-      // 5. Update stock for each variant (decrement)
+      // 5. Update stock for each variant (atomic decrement in DB)
       for (const item of items) {
         const { error: stockError } = await supabase.rpc('decrement_stock', {
           variant_id: item.variant.id,
           qty: item.quantity,
         });
-
-        // Fallback: if RPC doesn't exist, do manual update
-        if (stockError) {
-          const { error: updateError } = await supabase
-            .from('product_variants')
-            .update({ stock: item.variant.stock - item.quantity })
-            .eq('id', item.variant.id);
-          if (updateError)
-            throw new Error(`Error actualizando stock: ${updateError.message}`);
-        }
+        if (stockError)
+          throw new Error(`Stock insuficiente: ${item.product.name} talla ${item.variant.size}`);
       }
 
       // 6. Insert inventory movements

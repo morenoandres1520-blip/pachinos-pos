@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useId } from 'react';
+import { useState, useRef, useId, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,8 @@ import { AlertTriangle, Loader2, Upload, X, ImageIcon } from 'lucide-react';
 import { formatCOP } from '@/lib/format';
 import type { Product } from '@/types/database';
 
-type Category = 'Dama' | 'Caballero' | 'Niño' | 'Niña' | 'Unisex';
 type Material = 'cuero' | 'sintético' | 'tela' | 'otro';
 
-const CATEGORIES: Category[] = ['Dama', 'Caballero', 'Niño', 'Niña', 'Unisex'];
 const MATERIALS: { value: Material; label: string }[] = [
   { value: 'cuero', label: 'Cuero' },
   { value: 'sintético', label: 'Sintético' },
@@ -40,7 +38,7 @@ interface ProductFormProps {
 interface FormFields {
   name: string;
   sku: string;
-  category: Category | '';
+  category: string;
   brand: string;
   color: string;
   material: Material | '';
@@ -65,10 +63,25 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
   const isEditMode = product != null;
   const formId = useId();
 
+  const [categories, setCategories] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadOptions = async () => {
+      const [catRes, brandRes] = await Promise.all([
+        supabase.from('categories').select('name').order('name'),
+        supabase.from('brands').select('name').order('name'),
+      ]);
+      if (catRes.data) setCategories(catRes.data.map((c) => c.name));
+      if (brandRes.data) setBrands(brandRes.data.map((b) => b.name));
+    };
+    loadOptions();
+  }, []);
+
   const [fields, setFields] = useState<FormFields>({
     name: product?.name ?? '',
     sku: product?.sku ?? '',
-    category: (product?.category as Category) ?? '',
+    category: product?.category ?? '',
     brand: product?.brand ?? '',
     color: product?.color ?? '',
     material: (product?.material as Material) ?? '',
@@ -173,7 +186,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
       const payload = {
         name: fields.name.trim(),
         sku: fields.sku.trim().toUpperCase(),
-        category: fields.category as Category,
+        category: fields.category,
         brand: fields.brand.trim() || null,
         color: fields.color.trim() || null,
         material: fields.material as Material,
@@ -276,12 +289,12 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
             <Label htmlFor={`${formId}-category`}>
               Categoría <span className="text-destructive">*</span>
             </Label>
-            <Select value={fields.category} onValueChange={(v) => setField('category', v as Category)}>
+            <Select value={fields.category} onValueChange={(v) => setField('category', v)}>
               <SelectTrigger id={`${formId}-category`} aria-invalid={!!errors.category}>
                 <SelectValue placeholder="Seleccionar…" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
@@ -310,12 +323,26 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor={`${formId}-brand`}>Marca</Label>
-            <Input
-              id={`${formId}-brand`}
-              value={fields.brand}
-              onChange={(e) => setField('brand', e.target.value)}
-              placeholder="Ej. Vélez"
-            />
+            {brands.length > 0 ? (
+              <Select value={fields.brand} onValueChange={(v) => setField('brand', v)}>
+                <SelectTrigger id={`${formId}-brand`}>
+                  <SelectValue placeholder="Seleccionar…" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin marca</SelectItem>
+                  {brands.map((b) => (
+                    <SelectItem key={b} value={b}>{b}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                id={`${formId}-brand`}
+                value={fields.brand}
+                onChange={(e) => setField('brand', e.target.value)}
+                placeholder="Ej. Vélez"
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={`${formId}-color`}>Color</Label>

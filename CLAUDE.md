@@ -114,11 +114,6 @@ Migración única: `supabase/migrations/001_initial_schema.sql`
 | `categories` | Dama, Caballero, Niño, Niña, Unisex |
 | `brands` | Marcas de calzado |
 
-### Inconsistencias conocidas entre tipos TS y DB
-
-- `ProductVariant.size` es `number` en TypeScript pero `text` en la DB — la DB es la fuente de verdad
-- `Product.price_cost / price_sale` en TypeScript vs `cost_price / sale_price` en la DB — revisar queries
-
 ### Métodos de pago
 
 `efectivo` | `tarjeta` | `transferencia` | `nequi` | `daviplata`

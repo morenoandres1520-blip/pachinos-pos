@@ -23,8 +23,6 @@ export interface BusinessConfig {
   created_at: string;
 }
 
-export type ProductCategory = 'Dama' | 'Caballero' | 'Niño' | 'Niña' | 'Unisex';
-
 export interface Category {
   id: string;
   name: string;
@@ -41,7 +39,7 @@ export interface Product {
   id: string;
   name: string;
   sku: string;
-  category: ProductCategory | string;
+  category: string;
   brand: string | null;
   color: string | null;
   material: string | null;

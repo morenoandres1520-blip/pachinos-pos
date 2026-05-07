@@ -31,6 +31,7 @@ export default function POSPage() {
 
   const [products, setProducts] = useState<ProductWithVariants[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductWithVariants[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -85,6 +86,10 @@ export default function POSPage() {
 
   useEffect(() => {
     loadProducts();
+    const supabase = createClient();
+    supabase.from('categories').select('name').order('name').then(({ data }) => {
+      if (data) setCategories(data.map((c) => c.name));
+    });
   }, [loadProducts]);
 
   useEffect(() => {
@@ -152,6 +157,7 @@ export default function POSPage() {
             onSearch={setSearchQuery}
             onCategoryChange={setSelectedCategory}
             selectedCategory={selectedCategory}
+            categories={categories}
           />
         </div>
       </div>

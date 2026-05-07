@@ -28,9 +28,7 @@ interface ProductWithVariants extends Product {
 }
 
 type StatusFilter = 'all' | 'active' | 'inactive';
-type CategoryFilter = 'all' | 'Dama' | 'Caballero' | 'Niño' | 'Niña' | 'Unisex';
 
-const CATEGORIES: Exclude<CategoryFilter, 'all'>[] = ['Dama', 'Caballero', 'Niño', 'Niña', 'Unisex'];
 const LOW_STOCK_THRESHOLD = 3;
 
 function SkeletonCard() {
@@ -56,8 +54,9 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [categories, setCategories] = useState<string[]>([]);
   const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -87,6 +86,9 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchProducts();
+    supabase.from('categories').select('name').order('name').then(({ data }) => {
+      if (data) setCategories(data.map((c) => c.name));
+    });
   }, [fetchProducts]);
 
   const handleToggleActive = useCallback(
@@ -205,13 +207,13 @@ export default function InventoryPage() {
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as CategoryFilter)}>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="h-8 min-w-[130px] text-xs">
               <SelectValue placeholder="Categoría" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las categorías</SelectItem>
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
               ))}
             </SelectContent>

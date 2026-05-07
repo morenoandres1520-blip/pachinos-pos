@@ -4,25 +4,18 @@ import { useEffect, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const CATEGORIES = [
-  { label: 'Todos', value: '' },
-  { label: 'Dama', value: 'Dama' },
-  { label: 'Caballero', value: 'Caballero' },
-  { label: 'Niño', value: 'Niño' },
-  { label: 'Niña', value: 'Niña' },
-  { label: 'Deportivo', value: 'Deportivo' },
-];
-
 interface ProductSearchProps {
   onSearch: (query: string) => void;
   onCategoryChange: (category: string) => void;
   selectedCategory: string;
+  categories: string[];
 }
 
 export function ProductSearch({
   onSearch,
   onCategoryChange,
   selectedCategory,
+  categories,
 }: ProductSearchProps) {
   const [query, setQuery] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,15 +55,23 @@ export function ProductSearch({
 
       {/* Category pills */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {CATEGORIES.map((cat) => (
+        <Button
+          variant={selectedCategory === '' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onCategoryChange('')}
+          className="shrink-0 rounded-full px-4"
+        >
+          Todos
+        </Button>
+        {categories.map((cat) => (
           <Button
-            key={cat.value}
-            variant={selectedCategory === cat.value ? 'default' : 'outline'}
+            key={cat}
+            variant={selectedCategory === cat ? 'default' : 'outline'}
             size="sm"
-            onClick={() => onCategoryChange(cat.value)}
+            onClick={() => onCategoryChange(cat)}
             className="shrink-0 rounded-full px-4"
           >
-            {cat.label}
+            {cat}
           </Button>
         ))}
       </div>

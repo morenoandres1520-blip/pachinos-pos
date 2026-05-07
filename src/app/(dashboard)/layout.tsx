@@ -17,24 +17,16 @@ export default function DashboardLayout({
     window.location.href = '/login';
   };
 
-  if (loading) {
+  // Show spinner while the auth state is being determined.
+  // Never redirect from the client — the middleware owns all auth redirects.
+  // If the user truly has no session, the middleware already redirected them
+  // to /login before they could reach this layout.
+  if (loading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-amber-50">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="size-8 animate-spin text-amber-700" />
           <p className="text-sm text-amber-800">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    window.location.replace('/login');
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-amber-50">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="size-8 animate-spin text-amber-700" />
-          <p className="text-sm text-amber-800">Redirigiendo...</p>
         </div>
       </div>
     );

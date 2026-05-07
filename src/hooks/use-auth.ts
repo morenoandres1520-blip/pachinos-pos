@@ -21,22 +21,9 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient();
 
-    // getUser() verifies the session server-side via HTTP-only cookies.
-    // getSession() only reads localStorage and returns null in SSR cookie-based auth.
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        setState({ user, profile, loading: false });
-      } else {
-        setState({ user: null, profile: null, loading: false });
-      }
-    });
-
-    // Handles subsequent changes: sign-in, sign-out, token refresh
+    // onAuthStateChange is the only reliable client-side auth source in
+    // Supabase SSR. getUser() and getSession() read from localStorage which
+    // may be out of sync with the HTTP-only cookies the middleware manages.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
@@ -52,17 +39,7 @@ export function useAuth() {
       }
     );
 
-    // Last resort: if both fail (network timeout), stop spinner after 8s
-    const timeout = setTimeout(() => {
-      setState((prev) =>
-        prev.loading ? { user: null, profile: null, loading: false } : prev
-      );
-    }, 8000);
-
-    return () => {
-      clearTimeout(timeout);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {

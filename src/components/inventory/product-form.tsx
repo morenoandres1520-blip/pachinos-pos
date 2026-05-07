@@ -141,7 +141,7 @@ export function ProductForm({ product, variants, onSuccess, onCancel }: ProductF
 
   function handleRemoveImage() {
     setImageFile(null);
-    setImagePreview(isEditMode ? (product?.image_url ?? null) : null);
+    setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
@@ -193,6 +193,7 @@ export function ProductForm({ product, variants, onSuccess, onCancel }: ProductF
     try {
       let imageUrl: string | null = product?.image_url ?? null;
       if (imageFile) imageUrl = await uploadImage(imageFile);
+      else if (!imagePreview) imageUrl = null;
 
       const payload = {
         name: fields.name.trim(),

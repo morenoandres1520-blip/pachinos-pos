@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { CheckCircle, Plus, Download, MessageCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -47,8 +47,11 @@ export function SaleSuccess({
 }: SaleSuccessProps) {
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [loadingWa, setLoadingWa] = useState(false);
+  const [cachedData, setCachedData] = useState<SaleData | null>(null);
 
   const fetchSaleData = useCallback(async (): Promise<SaleData> => {
+    if (cachedData) return cachedData;
+
     const supabase = createClient();
 
     const [saleRes, configRes] = await Promise.all([
@@ -69,14 +72,21 @@ export function SaleSuccess({
       seller: { full_name: string } | null;
     };
 
-    return {
+    const result: SaleData = {
       sale: raw,
       items: raw.items ?? [],
       payments: raw.payments ?? [],
       config: configRes.data as BusinessConfig,
       sellerName: raw.seller?.full_name ?? '',
     };
-  }, [invoiceNumber]);
+    setCachedData(result);
+    return result;
+  }, [invoiceNumber, cachedData]);
+
+  // Pre-fetch sale data silently on mount so buttons respond instantly
+  useEffect(() => {
+    fetchSaleData().catch(() => {});
+  }, [fetchSaleData]);
 
   const handleDownloadPDF = async () => {
     setLoadingPdf(true);

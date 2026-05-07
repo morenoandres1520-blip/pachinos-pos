@@ -99,8 +99,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
             product,
             variant,
             quantity: 1,
-            unitPrice: product.price_sale,
-            subtotal: product.price_sale,
+            unitPrice: product.sale_price,
+            subtotal: product.sale_price,
           },
         ],
       };

@@ -74,7 +74,7 @@ export function InventoryCard({
         </div>
 
         <div className="flex items-center justify-between">
-          <span className="text-sm font-bold">{formatCOP(product.price_sale)}</span>
+          <span className="text-sm font-bold">{formatCOP(product.sale_price)}</span>
           <Badge
             variant={isOutOfStock ? 'destructive' : totalStock <= lowStockThreshold ? 'outline' : 'secondary'}
             className="text-xs"

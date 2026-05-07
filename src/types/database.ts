@@ -45,8 +45,8 @@ export interface Product {
   brand: string | null;
   color: string | null;
   material: string | null;
-  price_cost: number;
-  price_sale: number;
+  cost_price: number;
+  sale_price: number;
   image_url: string | null;
   is_active: boolean;
   created_at: string;
@@ -55,7 +55,7 @@ export interface Product {
 export interface ProductVariant {
   id: string;
   product_id: string;
-  size: number;
+  size: string;
   stock: number;
   created_at: string;
 }

@@ -16,7 +16,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
 
-  const variants = [...product.product_variants].sort((a, b) => a.size - b.size);
+  const variants = [...product.product_variants].sort((a, b) => Number(a.size) - Number(b.size));
 
   const handleSizeTap = (variant: ProductVariant) => {
     if (variant.stock <= 0) return;
@@ -46,7 +46,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <p className="text-xs text-muted-foreground truncate">{product.brand}</p>
           )}
           <p className="text-base font-bold text-primary mt-1">
-            {formatCOP(product.price_sale)}
+            {formatCOP(product.sale_price)}
           </p>
         </div>
       </div>

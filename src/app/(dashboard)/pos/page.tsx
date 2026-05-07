@@ -55,7 +55,7 @@ export default function POSPage() {
         category,
         brand,
         color,
-        price_sale,
+        sale_price,
         image_url,
         is_active,
         product_variants (

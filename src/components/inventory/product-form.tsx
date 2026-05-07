@@ -72,8 +72,8 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
     brand: product?.brand ?? '',
     color: product?.color ?? '',
     material: (product?.material as Material) ?? '',
-    price_cost: product?.price_cost ? formatCOP(product.price_cost) : '',
-    price_sale: product?.price_sale ? formatCOP(product.price_sale) : '',
+    price_cost: product?.cost_price ? formatCOP(product.cost_price) : '',
+    price_sale: product?.sale_price ? formatCOP(product.sale_price) : '',
     is_active: product?.is_active ?? true,
   });
 
@@ -177,8 +177,8 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         brand: fields.brand.trim() || null,
         color: fields.color.trim() || null,
         material: fields.material as Material,
-        price_cost: parseCOP(fields.price_cost),
-        price_sale: parseCOP(fields.price_sale),
+        cost_price: parseCOP(fields.price_cost),
+        sale_price: parseCOP(fields.price_sale),
         is_active: fields.is_active,
         image_url: imageUrl,
       };
@@ -205,7 +205,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           .filter((size) => (sizeStock.get(size) ?? 0) > 0)
           .map((size) => ({
             product_id: (newProduct as { id: string }).id,
-            size,
+            size: String(size),
             stock: sizeStock.get(size) ?? 0,
           }));
 

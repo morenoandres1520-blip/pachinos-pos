@@ -60,7 +60,7 @@ export default function InventoryPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductWithVariants | null>(null);
 
   const [stockProduct, setStockProduct] = useState<ProductWithVariants | null>(null);
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
@@ -317,6 +317,7 @@ export default function InventoryPage() {
           </SheetHeader>
           <ProductForm
             product={editingProduct}
+            variants={editingProduct?.product_variants}
             onSuccess={handleFormSuccess}
             onCancel={() => setSheetOpen(false)}
           />

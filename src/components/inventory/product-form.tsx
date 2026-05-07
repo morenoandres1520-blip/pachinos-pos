@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { AlertTriangle, Loader2, Upload, X, ImageIcon } from 'lucide-react';
 import { formatCOP } from '@/lib/format';
-import type { Product } from '@/types/database';
+import type { Product, ProductVariant } from '@/types/database';
 
 type Material = 'cuero' | 'sintético' | 'tela' | 'otro';
 
@@ -31,6 +31,7 @@ const STORAGE_BUCKET = 'images';
 
 interface ProductFormProps {
   product?: Product | null;
+  variants?: ProductVariant[];
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -58,7 +59,7 @@ function formatInputCOP(raw: string): string {
   return n === 0 ? '' : formatCOP(n);
 }
 
-export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) {
+export function ProductForm({ product, variants, onSuccess, onCancel }: ProductFormProps) {
   const supabase = createClient();
   const isEditMode = product != null;
   const formId = useId();
@@ -90,9 +91,14 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
     is_active: product?.is_active ?? true,
   });
 
-  const [sizeStock, setSizeStock] = useState<Map<number, number>>(
-    () => new Map(SHOE_SIZES.map((s) => [s, 0]))
-  );
+  const [sizeStock, setSizeStock] = useState<Map<number, number>>(() => {
+    const map = new Map(SHOE_SIZES.map((s) => [s, 0]));
+    for (const v of variants ?? []) {
+      const sizeNum = Number(v.size);
+      if (!isNaN(sizeNum)) map.set(sizeNum, v.stock);
+    }
+    return map;
+  });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image_url ?? null);
@@ -203,6 +209,18 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
           .eq('id', product.id);
 
         if (updateError) throw new Error(updateError.message);
+
+        const variantsPayload = SHOE_SIZES.map((size) => ({
+          product_id: product.id,
+          size: String(size),
+          stock: sizeStock.get(size) ?? 0,
+        }));
+
+        const { error: variantError } = await supabase
+          .from('product_variants')
+          .upsert(variantsPayload, { onConflict: 'product_id,size' });
+
+        if (variantError) throw new Error(variantError.message);
       } else {
         const { data: newProduct, error: insertError } = await supabase
           .from('products')
@@ -452,15 +470,16 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
         <p className="text-xs text-muted-foreground">PNG, JPG o WEBP · máx. 5 MB</p>
       </section>
 
-      {/* Tallas (solo crear) */}
-      {!isEditMode && (
-        <section className="space-y-3">
+      {/* Tallas y stock */}
+      <section className="space-y-3">
           <div>
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Tallas y stock inicial
+              Tallas y stock{!isEditMode && ' inicial'}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Ingresa 0 para omitir una talla.
+              {isEditMode
+                ? 'El stock se actualizará al guardar.'
+                : 'Ingresa 0 para omitir una talla.'}
             </p>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -495,8 +514,7 @@ export function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) 
               </p>
             );
           })()}
-        </section>
-      )}
+      </section>
 
       {/* Estado */}
       <section className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">

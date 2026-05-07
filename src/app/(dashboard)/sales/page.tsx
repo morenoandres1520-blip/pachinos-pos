@@ -12,6 +12,7 @@ import {
   Ban,
   ChevronDown,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { usePermissions } from '@/hooks/use-permissions';
@@ -636,6 +637,7 @@ export default function SalesPage() {
         );
       }
 
+      toast.success('Venta anulada y stock restaurado');
       setVoidOpen(false);
       setVoidTarget(null);
 

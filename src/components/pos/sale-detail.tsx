@@ -231,10 +231,11 @@ export function SaleDetail({ sale, open, onOpenChange }: SaleDetailProps) {
             variant="outline"
             className="flex-1 min-h-[44px]"
             onClick={() => {
-              const phone = sale.customer_phone
-                ? sale.customer_phone.replace(/\D/g, '')
-                : '';
-              const url = `https://wa.me/${phone}?text=${whatsappMessage}`;
+              const digits = (sale.customer_phone ?? '').replace(/\D/g, '');
+              const phone = digits.length === 10 ? `57${digits}` : digits;
+              const url = phone
+                ? `https://wa.me/${phone}?text=${whatsappMessage}`
+                : `https://wa.me/?text=${whatsappMessage}`;
               window.open(url, '_blank');
             }}
           >

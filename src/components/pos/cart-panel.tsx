@@ -16,7 +16,6 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
   const items = useCartStore((s) => s.items);
   const subtotal = useCartStore((s) => s.subtotal);
   const discountAmount = useCartStore((s) => s.discountAmount);
-  const ivaAmount = useCartStore((s) => s.ivaAmount);
   const total = useCartStore((s) => s.total);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);

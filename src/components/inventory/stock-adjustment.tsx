@@ -24,7 +24,8 @@ interface StockAdjustmentProps {
   onCancel: () => void;
 }
 
-export function StockAdjustment({ product, variants, onSuccess, onCancel }: StockAdjustmentProps) {
+export function StockAdjustment({ product, variants: rawVariants, onSuccess, onCancel }: StockAdjustmentProps) {
+  const variants = [...rawVariants].sort((a, b) => Number(a.size) - Number(b.size));
   const supabase = createClient();
   const { user } = useAuth();
 

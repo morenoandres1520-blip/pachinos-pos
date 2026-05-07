@@ -62,7 +62,7 @@ const STANDARD_DISCOUNT = 3000;
 interface CheckoutDialogProps {
   open: boolean;
   onClose: () => void;
-  onSaleComplete: (invoiceNumber: string, total: number) => void;
+  onSaleComplete: (invoiceNumber: string, total: number, customerPhone: string) => void;
 }
 
 export function CheckoutDialog({
@@ -70,6 +70,7 @@ export function CheckoutDialog({
   onClose,
   onSaleComplete,
 }: CheckoutDialogProps) {
+  const clearCart = useCartStore((s) => s.clearCart);
   const { user } = useAuth();
   const supabase = createClient();
 
@@ -232,13 +233,20 @@ export function CheckoutDialog({
         throw new Error(`Error registrando movimientos: ${movementsError.message}`);
 
       toast.success('Venta registrada exitosamente');
-      onSaleComplete(invoiceNumber, totalAmount);
+      onSaleComplete(invoiceNumber, totalAmount, customerPhone);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
       toast.error(message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setDiscount('fixed', 0);
+    setShowCustomDiscount(false);
+    clearPayments();
+    onClose();
   };
 
   if (!open) return null;
@@ -251,7 +259,7 @@ export function CheckoutDialog({
           <h2 className="text-lg font-bold">Cobrar</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="size-10 rounded-full flex items-center justify-center hover:bg-muted"
           >
             <X className="size-5" />
@@ -381,6 +389,7 @@ export function CheckoutDialog({
                 type="number"
                 inputMode="numeric"
                 autoFocus
+                value={discountValue || ''}
                 placeholder="Valor del descuento"
                 className="w-full h-11 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 onChange={(e) => setDiscount('fixed', Number(e.target.value) || 0)}

@@ -119,9 +119,9 @@ export default function POSPage() {
   }, []);
 
   const handleSaleComplete = useCallback(
-    (invoiceNumber: string, total: number) => {
+    (invoiceNumber: string, total: number, customerPhone: string) => {
       setIsCheckoutOpen(false);
-      setSaleResult({ invoiceNumber, total });
+      setSaleResult({ invoiceNumber, total, customerPhone });
       clearCart();
     },
     [clearCart]

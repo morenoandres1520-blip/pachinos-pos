@@ -96,7 +96,8 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                     onClick={() =>
                       updateQuantity(item.variant.id, item.quantity + 1)
                     }
-                    className="size-9 rounded-lg bg-muted flex items-center justify-center active:bg-muted/70"
+                    disabled={item.quantity >= item.variant.stock}
+                    className="size-9 rounded-lg bg-muted flex items-center justify-center active:bg-muted/70 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Plus className="size-4" />
                   </button>

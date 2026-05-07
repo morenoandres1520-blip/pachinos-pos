@@ -80,6 +80,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set((state) => {
       const existing = state.items.find((item) => item.variant.id === variant.id);
       if (existing) {
+        if (existing.quantity >= variant.stock) return state;
         return {
           items: state.items.map((item) =>
             item.variant.id === variant.id
@@ -119,11 +120,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
       return;
     }
     set((state) => ({
-      items: state.items.map((item) =>
-        item.variant.id === variantId
-          ? { ...item, quantity, subtotal: quantity * item.unitPrice }
-          : item
-      ),
+      items: state.items.map((item) => {
+        if (item.variant.id !== variantId) return item;
+        const capped = Math.min(quantity, item.variant.stock);
+        return { ...item, quantity: capped, subtotal: capped * item.unitPrice };
+      }),
     }));
   },
 

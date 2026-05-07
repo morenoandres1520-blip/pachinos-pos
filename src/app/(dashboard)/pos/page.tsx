@@ -226,7 +226,7 @@ export default function POSPage() {
 
         {/* Desktop cart panel */}
         <aside className="hidden md:flex md:flex-col w-80 lg:w-96 border-l border-gray-200 bg-white">
-          <CartPanel onCheckout={handleCheckout} ivaEnabled={false} ivaRate={0} />
+          <CartPanel onCheckout={handleCheckout} />
         </aside>
       </div>
 
@@ -250,7 +250,7 @@ export default function POSPage() {
             <SheetTitle className="text-left">Carrito</SheetTitle>
           </SheetHeader>
           <div className="flex-1 overflow-hidden">
-            <CartPanel onCheckout={handleCheckout} ivaEnabled={false} ivaRate={0} />
+            <CartPanel onCheckout={handleCheckout} />
           </div>
         </SheetContent>
       </Sheet>
@@ -259,8 +259,6 @@ export default function POSPage() {
       <CheckoutDialog
         open={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        ivaEnabled={false}
-        ivaRate={0}
         onSaleComplete={handleSaleComplete}
       />
     </div>

@@ -7,12 +7,10 @@ import { formatCOP } from '@/lib/format';
 import { useCartStore } from '@/store/cart-store';
 
 interface CartPanelProps {
-  ivaEnabled: boolean;
-  ivaRate: number;
   onCheckout: () => void;
 }
 
-export function CartPanel({ ivaEnabled, ivaRate, onCheckout }: CartPanelProps) {
+export function CartPanel({ onCheckout }: CartPanelProps) {
   const [expanded, setExpanded] = useState(false);
 
   const items = useCartStore((s) => s.items);
@@ -24,6 +22,7 @@ export function CartPanel({ ivaEnabled, ivaRate, onCheckout }: CartPanelProps) {
   const removeItem = useCartStore((s) => s.removeItem);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalAmount = total(false, 0);
 
   if (items.length === 0) return null;
 
@@ -49,7 +48,7 @@ export function CartPanel({ ivaEnabled, ivaRate, onCheckout }: CartPanelProps) {
 
         <div className="flex items-center gap-3">
           <span className="font-bold text-lg">
-            {formatCOP(total(ivaEnabled, ivaRate))}
+            {formatCOP(totalAmount)}
           </span>
           {expanded ? (
             <ChevronDown className="size-5 text-muted-foreground" />
@@ -132,17 +131,9 @@ export function CartPanel({ ivaEnabled, ivaRate, onCheckout }: CartPanelProps) {
                 <span>-{formatCOP(discountAmount())}</span>
               </div>
             )}
-            {ivaEnabled && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  IVA ({ivaRate}%)
-                </span>
-                <span>{formatCOP(ivaAmount(ivaEnabled, ivaRate))}</span>
-              </div>
-            )}
             <div className="flex justify-between text-lg font-bold pt-1 border-t border-border">
               <span>Total</span>
-              <span>{formatCOP(total(ivaEnabled, ivaRate))}</span>
+              <span>{formatCOP(totalAmount)}</span>
             </div>
           </div>
         </div>
@@ -154,7 +145,7 @@ export function CartPanel({ ivaEnabled, ivaRate, onCheckout }: CartPanelProps) {
           onClick={onCheckout}
           className="w-full h-14 text-lg font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white"
         >
-          COBRAR {formatCOP(total(ivaEnabled, ivaRate))}
+          COBRAR {formatCOP(totalAmount)}
         </Button>
       </div>
     </div>

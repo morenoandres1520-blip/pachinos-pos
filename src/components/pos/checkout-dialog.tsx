@@ -7,11 +7,7 @@ import {
   ArrowLeftRight,
   Smartphone,
   X,
-  ChevronDown,
-  ChevronUp,
   Loader2,
-  Percent,
-  DollarSign,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -59,19 +55,17 @@ const PAYMENT_METHODS: {
   },
 ];
 
+const STANDARD_DISCOUNT = 3000;
+
 interface CheckoutDialogProps {
   open: boolean;
   onClose: () => void;
-  ivaEnabled: boolean;
-  ivaRate: number;
   onSaleComplete: (invoiceNumber: string, total: number) => void;
 }
 
 export function CheckoutDialog({
   open,
   onClose,
-  ivaEnabled,
-  ivaRate,
   onSaleComplete,
 }: CheckoutDialogProps) {
   const { user } = useAuth();
@@ -100,10 +94,10 @@ export function CheckoutDialog({
   const [paymentAmountStr, setPaymentAmountStr] = useState('');
   const [cashReceivedStr, setCashReceivedStr] = useState('');
   const [showCustomer, setShowCustomer] = useState(false);
-  const [showDiscount, setShowDiscount] = useState(false);
+  const [showCustomDiscount, setShowCustomDiscount] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const totalAmount = total(ivaEnabled, ivaRate);
+  const totalAmount = total(false, 0);
   const paidAmount = totalPayments();
   const remaining = Math.max(0, totalAmount - paidAmount);
 
@@ -169,7 +163,7 @@ export function CheckoutDialog({
           customer_email: customerEmail || null,
           subtotal: subtotal(),
           discount: discountAmount(),
-          iva: ivaAmount(ivaEnabled, ivaRate),
+          iva: 0,
           total: totalAmount,
           status: 'completada' as const,
         })
@@ -326,68 +320,54 @@ export function CheckoutDialog({
             )}
           </div>
 
-          {/* Discount section (collapsible) */}
-          <div className="border border-border rounded-xl overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowDiscount(!showDiscount)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/50"
-            >
-              <span>Descuento</span>
-              <div className="flex items-center gap-2">
-                {discountAmount() > 0 && (
-                  <span className="text-green-600 text-sm font-semibold">
-                    -{formatCOP(discountAmount())}
-                  </span>
-                )}
-                {showDiscount ? (
-                  <ChevronUp className="size-4" />
-                ) : (
-                  <ChevronDown className="size-4" />
-                )}
+          {/* Discount section */}
+          <div className="border border-border rounded-xl px-4 py-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Descuento</span>
+              {discountAmount() > 0 && (
+                <span className="text-green-600 text-sm font-semibold">
+                  -{formatCOP(discountAmount())}
+                </span>
+              )}
+            </div>
+
+            {discountAmount() > 0 ? (
+              <button
+                type="button"
+                onClick={() => { setDiscount('fixed', 0); setShowCustomDiscount(false); }}
+                className="w-full h-11 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-sm font-medium flex items-center justify-center gap-2 hover:bg-destructive/20 transition-colors"
+              >
+                <X className="size-4" />
+                Quitar descuento
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setDiscount('fixed', STANDARD_DISCOUNT); setShowCustomDiscount(false); }}
+                  className="flex-1 h-11 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold transition-colors"
+                >
+                  − {formatCOP(STANDARD_DISCOUNT)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCustomDiscount(!showCustomDiscount)}
+                  className="px-4 h-11 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  Otro
+                </button>
               </div>
-            </button>
-            {showDiscount && (
-              <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDiscount('percentage', discountValue)}
-                    className={`flex-1 h-11 rounded-lg border flex items-center justify-center gap-1 text-sm font-medium transition-colors ${
-                      discountType === 'percentage'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border hover:bg-muted'
-                    }`}
-                  >
-                    <Percent className="size-4" />
-                    Porcentaje
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDiscount('fixed', discountValue)}
-                    className={`flex-1 h-11 rounded-lg border flex items-center justify-center gap-1 text-sm font-medium transition-colors ${
-                      discountType === 'fixed'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border hover:bg-muted'
-                    }`}
-                  >
-                    <DollarSign className="size-4" />
-                    Valor fijo
-                  </button>
-                </div>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  value={discountValue || ''}
-                  onChange={(e) =>
-                    setDiscount(discountType, Number(e.target.value) || 0)
-                  }
-                  placeholder={
-                    discountType === 'percentage' ? 'Ej: 10' : 'Ej: 5000'
-                  }
-                  className="w-full h-11 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
+            )}
+
+            {showCustomDiscount && discountAmount() === 0 && (
+              <input
+                type="number"
+                inputMode="numeric"
+                autoFocus
+                placeholder="Valor del descuento"
+                className="w-full h-11 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                onChange={(e) => setDiscount('fixed', Number(e.target.value) || 0)}
+              />
             )}
           </div>
 
@@ -542,12 +522,6 @@ export function CheckoutDialog({
               <div className="flex justify-between text-sm text-green-600">
                 <span>Descuento</span>
                 <span>-{formatCOP(discountAmount())}</span>
-              </div>
-            )}
-            {ivaEnabled && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">IVA ({ivaRate}%)</span>
-                <span>{formatCOP(ivaAmount(ivaEnabled, ivaRate))}</span>
               </div>
             )}
             <div className="flex justify-between font-bold text-lg pt-1 border-t border-border">

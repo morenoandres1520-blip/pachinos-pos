@@ -89,6 +89,8 @@ export function CheckoutDialog({
   const discountType = useCartStore((s) => s.discountType);
   const discountValue = useCartStore((s) => s.discountValue);
   const setDiscount = useCartStore((s) => s.setDiscount);
+  const notes = useCartStore((s) => s.notes);
+  const setNotes = useCartStore((s) => s.setNotes);
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [paymentAmountStr, setPaymentAmountStr] = useState('');
@@ -166,6 +168,7 @@ export function CheckoutDialog({
           iva: 0,
           total: totalAmount,
           status: 'completada' as const,
+          notes: notes.trim() || null,
         })
         .select('id')
         .single();
@@ -318,6 +321,18 @@ export function CheckoutDialog({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Notas (opcional)</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Observaciones de la venta…"
+              rows={2}
+              className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
           </div>
 
           {/* Discount section */}

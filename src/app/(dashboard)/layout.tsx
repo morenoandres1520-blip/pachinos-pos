@@ -33,9 +33,9 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-amber-50/30">
+    <div className="flex h-screen flex-col bg-amber-50/30 overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-amber-200 bg-white">
+      <header className="shrink-0 z-40 border-b border-amber-200 bg-white">
         <div className="flex h-14 items-center justify-between px-4">
           <h1 className="text-lg font-bold text-amber-900">PaChinos</h1>
           <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ export default function DashboardLayout({
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pb-20">
+      <main className="flex-1 min-h-0 overflow-y-auto pb-16">
         {children}
       </main>
 

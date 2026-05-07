@@ -17,40 +17,21 @@ export function useAuth() {
     profile: null,
     loading: true,
   });
-  const supabase = createClient();
 
   useEffect(() => {
-    let mounted = true;
+    const supabase = createClient();
 
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!mounted) return;
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        if (!mounted) return;
-        setState({ user, profile, loading: false });
-      } else {
-        setState({ user: null, profile: null, loading: false });
-      }
-    };
-
-    getUser();
-
+    // onAuthStateChange fires INITIAL_SESSION immediately with the current
+    // session — no need to call getUser() separately (avoids race condition).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        if (!mounted) return;
         if (session?.user) {
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
-          if (!mounted) return;
+
           setState({ user: session.user, profile, loading: false });
         } else {
           setState({ user: null, profile: null, loading: false });
@@ -58,13 +39,11 @@ export function useAuth() {
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signOut = async () => {
+    const supabase = createClient();
     await supabase.auth.signOut();
   };
 

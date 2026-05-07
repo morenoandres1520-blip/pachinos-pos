@@ -126,7 +126,7 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] overflow-hidden bg-gray-50">
+    <div className="flex h-full overflow-hidden bg-gray-50">
 
       {/* ── Left: product grid ─────────────────────────────── */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">

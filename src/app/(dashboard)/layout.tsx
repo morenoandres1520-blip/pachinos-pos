@@ -29,7 +29,15 @@ export default function DashboardLayout({
   }
 
   if (!user) {
-    return null;
+    window.location.replace('/login');
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-amber-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="size-8 animate-spin text-amber-700" />
+          <p className="text-sm text-amber-800">Redirigiendo...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

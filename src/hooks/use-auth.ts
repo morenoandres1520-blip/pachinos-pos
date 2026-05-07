@@ -11,15 +11,6 @@ interface AuthState {
   loading: boolean;
 }
 
-async function fetchProfile(supabase: ReturnType<typeof createClient>, userId: string) {
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  return data as Profile | null;
-}
-
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -30,22 +21,30 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Fast path: getSession() reads from localStorage — resolves immediately
-    // and prevents the infinite spinner if onAuthStateChange is slow.
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        const profile = await fetchProfile(supabase, session.user.id);
-        setState({ user: session.user, profile, loading: false });
+    // getUser() verifies the session server-side via HTTP-only cookies.
+    // getSession() only reads localStorage and returns null in SSR cookie-based auth.
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setState({ user, profile, loading: false });
       } else {
         setState({ user: null, profile: null, loading: false });
       }
     });
 
-    // Long-path: catches session changes (sign-in, sign-out, token refresh)
+    // Handles subsequent changes: sign-in, sign-out, token refresh
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
-          const profile = await fetchProfile(supabase, session.user.id);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
           setState({ user: session.user, profile, loading: false });
         } else {
           setState({ user: null, profile: null, loading: false });
@@ -53,12 +52,12 @@ export function useAuth() {
       }
     );
 
-    // Safety net: never leave loading=true for more than 6 seconds
+    // Last resort: if both fail (network timeout), stop spinner after 8s
     const timeout = setTimeout(() => {
       setState((prev) =>
         prev.loading ? { user: null, profile: null, loading: false } : prev
       );
-    }, 6000);
+    }, 8000);
 
     return () => {
       clearTimeout(timeout);

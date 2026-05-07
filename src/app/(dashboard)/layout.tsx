@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { LogOut, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { BottomNav } from '@/components/layout/bottom-nav';
@@ -12,11 +11,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, profile, loading, signOut } = useAuth();
-  const router = useRouter();
 
   const handleSignOut = async () => {
     await signOut();
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   if (loading) {

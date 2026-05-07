@@ -50,37 +50,24 @@ export default function POSPage() {
     const { data, error: queryError } = await supabase
       .from('products')
       .select(`
-        id,
-        name,
-        sku,
-        category,
-        brand,
-        color,
-        sale_price,
-        image_url,
-        is_active,
-        product_variants (
-          id,
-          product_id,
-          size,
-          stock
-        )
+        id, name, sku, category, brand, color, sale_price, image_url, is_active,
+        product_variants ( id, product_id, size, stock )
       `)
       .eq('is_active', true)
       .order('name', { ascending: true });
 
     if (queryError) {
-      setError('No se pudieron cargar los productos. Intente de nuevo.');
+      setError('No se pudieron cargar los productos.');
       setIsLoading(false);
       return;
     }
 
-    const productsWithStock = (data as ProductWithVariants[]).filter((product) =>
-      product.product_variants.some((variant) => variant.stock > 0)
+    const withStock = (data as ProductWithVariants[]).filter((p) =>
+      p.product_variants.some((v) => v.stock > 0)
     );
 
-    setProducts(productsWithStock);
-    setFilteredProducts(productsWithStock);
+    setProducts(withStock);
+    setFilteredProducts(withStock);
     setIsLoading(false);
   }, []);
 
@@ -94,22 +81,19 @@ export default function POSPage() {
 
   useEffect(() => {
     let results = products;
-
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
+      const q = searchQuery.toLowerCase().trim();
       results = results.filter(
-        (product) =>
-          product.name.toLowerCase().includes(query) ||
-          product.sku.toLowerCase().includes(query) ||
-          product.brand?.toLowerCase().includes(query) ||
-          product.color?.toLowerCase().includes(query)
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.brand?.toLowerCase().includes(q) ||
+          p.color?.toLowerCase().includes(q)
       );
     }
-
     if (selectedCategory) {
       results = results.filter((p) => p.category === selectedCategory);
     }
-
     setFilteredProducts(results);
   }, [searchQuery, selectedCategory, products]);
 
@@ -128,13 +112,7 @@ export default function POSPage() {
     [clearCart, loadProducts]
   );
 
-  const handleSaleSuccessClose = useCallback(() => {
-    setSaleResult(null);
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    loadProducts();
-  }, [loadProducts]);
+  const handleSaleSuccessClose = useCallback(() => setSaleResult(null), []);
 
   if (saleResult) {
     return (
@@ -148,11 +126,12 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 pb-24 md:pb-0">
-      {/* Header */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-3">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">Punto de Venta</h1>
+    <div className="flex h-[calc(100dvh-3.5rem)] overflow-hidden bg-gray-50">
+
+      {/* ── Left: product grid ─────────────────────────────── */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Search + filters */}
+        <div className="shrink-0 bg-white border-b border-gray-200 px-3 py-2.5 shadow-sm">
           <ProductSearch
             onSearch={setSearchQuery}
             onCategoryChange={setSelectedCategory}
@@ -160,49 +139,40 @@ export default function POSPage() {
             categories={categories}
           />
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
         {/* Product grid */}
-        <main className="flex-1 overflow-y-auto p-4 md:pr-2">
+        <div className="flex-1 overflow-y-auto px-3 py-3">
           {error && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-red-600 mb-4 text-sm">{error}</p>
-              <Button variant="outline" onClick={handleRetry} size="sm">
+            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+              <p className="text-red-500 text-sm">{error}</p>
+              <Button variant="outline" size="sm" onClick={loadProducts}>
                 Reintentar
               </Button>
             </div>
           )}
 
           {isLoading && !error && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {Array.from({ length: 10 }).map((_, index) => (
-                <div key={index} className="flex flex-col space-y-2">
-                  <Skeleton className="aspect-square w-full rounded-lg" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="aspect-square w-full rounded-2xl" />
                   <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-8 w-full rounded" />
+                  <Skeleton className="h-8 w-full rounded-xl" />
                 </div>
               ))}
             </div>
           )}
 
           {!isLoading && !error && filteredProducts.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-gray-500 text-sm">
+            <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+              <p className="text-muted-foreground text-sm">
                 {searchQuery
-                  ? `No se encontraron productos para "${searchQuery}"`
-                  : 'No hay productos disponibles con stock.'}
+                  ? `Sin resultados para "${searchQuery}"`
+                  : 'No hay productos con stock.'}
               </p>
               {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => setSearchQuery('')}
-                >
-                  <X className="h-4 w-4 mr-1" />
+                <Button variant="ghost" size="sm" onClick={() => setSearchQuery('')}>
+                  <X className="size-4 mr-1" />
                   Limpiar búsqueda
                 </Button>
               )}
@@ -211,43 +181,79 @@ export default function POSPage() {
 
           {!isLoading && !error && filteredProducts.length > 0 && (
             <>
-              <p className="text-xs text-gray-500 mb-3">
+              <p className="text-xs text-muted-foreground mb-2.5">
                 {filteredProducts.length}{' '}
                 {filteredProducts.length === 1 ? 'producto' : 'productos'}
               </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 pb-28 md:pb-4">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             </>
           )}
-        </main>
+        </div>
+      </div>
 
-        {/* Desktop cart panel */}
-        <aside className="hidden md:flex md:flex-col w-80 lg:w-96 border-l border-gray-200 bg-white">
+      {/* ── Right: desktop cart sidebar ────────────────────── */}
+      <aside className="hidden md:flex flex-col w-80 lg:w-96 border-l border-gray-200 bg-white shadow-sm">
+        <div className="px-4 py-3 border-b border-border">
+          <h2 className="font-bold text-base text-amber-900">
+            Carrito
+            {cartCount > 0 && (
+              <span className="ml-2 inline-flex items-center justify-center size-5 rounded-full bg-amber-700 text-white text-[10px] font-bold">
+                {cartCount}
+              </span>
+            )}
+          </h2>
+        </div>
+        <div className="flex-1 overflow-hidden">
           <CartPanel onCheckout={handleCheckout} />
-        </aside>
-      </div>
+        </div>
+      </aside>
 
-      {/* Mobile sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-lg px-4 py-3 md:hidden">
-        <Button
-          className="w-full bg-amber-800 hover:bg-amber-900 text-white font-semibold"
-          size="lg"
+      {/* ── Mobile: FAB cart button ─────────────────────────── */}
+      {cartCount > 0 && (
+        <button
+          type="button"
           onClick={() => setIsCartOpen(true)}
-          disabled={cartCount === 0}
+          className="
+            md:hidden fixed bottom-[72px] right-4 z-40
+            flex items-center gap-2.5
+            bg-amber-800 hover:bg-amber-900 active:bg-amber-950
+            text-white font-bold text-sm
+            px-4 h-14 rounded-2xl
+            shadow-2xl shadow-amber-900/40
+            transition-all active:scale-95
+          "
         >
-          <ShoppingCart className="h-5 w-5 mr-2" />
-          {cartCount === 0 ? 'Carrito vacío' : `Ver carrito (${cartCount})`}
-        </Button>
-      </div>
+          <div className="relative">
+            <ShoppingCart className="size-5" />
+            <span className="absolute -top-2 -right-2.5 size-5 bg-green-400 text-green-900 text-[10px] font-black rounded-full flex items-center justify-center">
+              {cartCount}
+            </span>
+          </div>
+          <span>Ver carrito</span>
+        </button>
+      )}
 
-      {/* Mobile cart drawer */}
+      {/* ── Mobile: cart sheet ──────────────────────────────── */}
       <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl flex flex-col p-0">
-          <SheetHeader className="px-4 pt-4 pb-2 border-b border-gray-100">
-            <SheetTitle className="text-left">Carrito</SheetTitle>
+        <SheetContent
+          side="bottom"
+          className="h-[92dvh] rounded-t-3xl p-0 flex flex-col overflow-hidden"
+        >
+          <SheetHeader className="shrink-0 px-5 pt-5 pb-3 border-b border-border">
+            <div className="flex items-center justify-between">
+              <SheetTitle className="text-lg font-bold text-amber-900">
+                Carrito
+                {cartCount > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center size-5 rounded-full bg-amber-700 text-white text-[10px] font-bold">
+                    {cartCount}
+                  </span>
+                )}
+              </SheetTitle>
+            </div>
           </SheetHeader>
           <div className="flex-1 overflow-hidden">
             <CartPanel onCheckout={handleCheckout} />

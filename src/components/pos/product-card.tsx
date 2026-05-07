@@ -16,7 +16,9 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
 
-  const variants = [...product.product_variants].sort((a, b) => Number(a.size) - Number(b.size));
+  const variants = [...product.product_variants]
+    .filter((v) => v.stock > 0)
+    .sort((a, b) => Number(a.size) - Number(b.size));
 
   const handleSizeTap = (variant: ProductVariant) => {
     if (variant.stock <= 0) return;

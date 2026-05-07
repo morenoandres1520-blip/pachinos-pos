@@ -26,7 +26,10 @@ const MATERIALS: { value: Material; label: string }[] = [
   { value: 'otro', label: 'Otro' },
 ];
 
-const SHOE_SIZES: number[] = Array.from({ length: 13 }, (_, i) => 34 + i);
+const SHOE_SIZES: number[] = [
+  ...Array.from({ length: 17 }, (_, i) => 16 + i), // 16–32 niños
+  ...Array.from({ length: 13 }, (_, i) => 34 + i), // 34–46 adultos
+];
 const STORAGE_BUCKET = 'images';
 
 interface ProductFormProps {

@@ -582,6 +582,18 @@ export default function SalesPage() {
   const confirmVoid = async (saleId: string, reason: string) => {
     setVoidLoading(true);
     try {
+      // 1. Fetch the sale items to know what stock to restore
+      const { data: items, error: itemsError } = await supabase
+        .from('sale_items')
+        .select('product_variant_id, quantity')
+        .eq('sale_id', saleId);
+
+      if (itemsError) {
+        console.error('Error fetching sale items:', itemsError);
+        return;
+      }
+
+      // 2. Mark sale as anulada
       const { error } = await supabase
         .from('sales')
         .update({ status: 'anulada', void_reason: reason || null })
@@ -590,6 +602,22 @@ export default function SalesPage() {
       if (error) {
         console.error('Error voiding sale:', error);
         return;
+      }
+
+      // 3. Restore stock and log inventory movements
+      for (const item of items ?? []) {
+        await supabase.rpc('increment_stock', {
+          variant_id: item.product_variant_id,
+          qty: item.quantity,
+        });
+
+        await supabase.from('inventory_movements').insert({
+          product_variant_id: item.product_variant_id,
+          type: 'anulacion',
+          quantity: item.quantity,
+          reason: `Anulación venta — ${reason || 'sin motivo'}`,
+          user_id: user?.id,
+        });
       }
 
       // Update local state

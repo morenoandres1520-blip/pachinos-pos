@@ -590,7 +590,7 @@ export default function SalesPage() {
         .eq('sale_id', saleId);
 
       if (itemsError) {
-        console.error('Error fetching sale items:', itemsError);
+        toast.error('Error al obtener los ítems de la venta');
         return;
       }
 
@@ -601,7 +601,7 @@ export default function SalesPage() {
         .eq('id', saleId);
 
       if (error) {
-        console.error('Error voiding sale:', error);
+        toast.error('Error al anular la venta', { description: error.message });
         return;
       }
 

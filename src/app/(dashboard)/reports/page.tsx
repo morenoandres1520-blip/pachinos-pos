@@ -109,11 +109,13 @@ export default function ReportsPage() {
   const [customEnd, setCustomEnd] = useState('');
   const [data, setData] = useState<ReportData>(emptyData);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   const supabase = useMemo(() => createClient(), []);
 
   const fetchReportData = useCallback(async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const { start, end } = getDateRange(rangePreset, customStart, customEnd);
 
@@ -135,7 +137,7 @@ export default function ReportsPage() {
         .order('created_at', { ascending: true });
 
       if (salesError) {
-        console.error('Error fetching sales:', salesError);
+        setFetchError(true);
         setData(emptyData);
         setLoading(false);
         return;
@@ -224,8 +226,8 @@ export default function ReportsPage() {
         topProducts,
         sellers,
       });
-    } catch (err) {
-      console.error('Error loading report data:', err);
+    } catch {
+      setFetchError(true);
       setData(emptyData);
     } finally {
       setLoading(false);
@@ -313,6 +315,13 @@ export default function ReportsPage() {
           </div>
         )}
       </div>
+
+      {/* Error banner */}
+      {fetchError && !loading && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          No se pudieron cargar los reportes. Verifica tu conexión e intenta de nuevo.
+        </div>
+      )}
 
       {/* KPI Cards */}
       <KpiCards

@@ -156,7 +156,17 @@ export function CheckoutDialog({
       if (invoiceError) throw new Error(`Error generando factura: ${invoiceError.message}`);
       const invoiceNumber = invoiceData as string;
 
-      // 2. Insert sale
+      // 2. Verify and decrement stock FIRST — if this fails no sale data is written
+      for (const item of items) {
+        const { error: stockError } = await supabase.rpc('decrement_stock', {
+          variant_id: item.variant.id,
+          qty: item.quantity,
+        });
+        if (stockError)
+          throw new Error(`Stock insuficiente: ${item.product.name} talla ${item.variant.size}`);
+      }
+
+      // 3. Insert sale
       const { data: sale, error: saleError } = await supabase
         .from('sales')
         .insert({
@@ -178,7 +188,7 @@ export function CheckoutDialog({
 
       if (saleError) throw new Error(`Error creando venta: ${saleError.message}`);
 
-      // 3. Insert sale items
+      // 4. Insert sale items
       const saleItems = items.map((item) => ({
         sale_id: sale.id,
         product_variant_id: item.variant.id,
@@ -195,7 +205,7 @@ export function CheckoutDialog({
         .insert(saleItems);
       if (itemsError) throw new Error(`Error guardando items: ${itemsError.message}`);
 
-      // 4. Insert sale payments
+      // 5. Insert sale payments
       const salePayments = payments.map((p) => ({
         sale_id: sale.id,
         method: p.method,
@@ -206,16 +216,6 @@ export function CheckoutDialog({
         .from('sale_payments')
         .insert(salePayments);
       if (paymentsError) throw new Error(`Error guardando pagos: ${paymentsError.message}`);
-
-      // 5. Update stock for each variant (atomic decrement in DB)
-      for (const item of items) {
-        const { error: stockError } = await supabase.rpc('decrement_stock', {
-          variant_id: item.variant.id,
-          qty: item.quantity,
-        });
-        if (stockError)
-          throw new Error(`Stock insuficiente: ${item.product.name} talla ${item.variant.size}`);
-      }
 
       // 6. Insert inventory movements
       const movements = items.map((item) => ({
@@ -244,6 +244,7 @@ export function CheckoutDialog({
 
   const handleClose = () => {
     setDiscount('fixed', 0);
+    setNotes('');
     setShowCustomDiscount(false);
     clearPayments();
     onClose();

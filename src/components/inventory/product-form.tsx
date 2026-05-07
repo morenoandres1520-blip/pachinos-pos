@@ -94,6 +94,8 @@ export function ProductForm({ product, variants, onSuccess, onCancel }: ProductF
     is_active: product?.is_active ?? true,
   });
 
+  const existingSizes = new Set((variants ?? []).map((v) => Number(v.size)));
+
   const [sizeStock, setSizeStock] = useState<Map<number, number>>(() => {
     const map = new Map(SHOE_SIZES.map((s) => [s, 0]));
     for (const v of variants ?? []) {
@@ -213,17 +215,22 @@ export function ProductForm({ product, variants, onSuccess, onCancel }: ProductF
 
         if (updateError) throw new Error(updateError.message);
 
-        const variantsPayload = SHOE_SIZES.map((size) => ({
-          product_id: product.id,
-          size: String(size),
-          stock: sizeStock.get(size) ?? 0,
-        }));
+        // Only upsert sizes that have stock OR already existed as variants
+        const variantsPayload = SHOE_SIZES
+          .filter((size) => (sizeStock.get(size) ?? 0) > 0 || existingSizes.has(size))
+          .map((size) => ({
+            product_id: product.id,
+            size: String(size),
+            stock: sizeStock.get(size) ?? 0,
+          }));
 
-        const { error: variantError } = await supabase
-          .from('product_variants')
-          .upsert(variantsPayload, { onConflict: 'product_id,size' });
+        if (variantsPayload.length > 0) {
+          const { error: variantError } = await supabase
+            .from('product_variants')
+            .upsert(variantsPayload, { onConflict: 'product_id,size' });
 
-        if (variantError) throw new Error(variantError.message);
+          if (variantError) throw new Error(variantError.message);
+        }
       } else {
         const { data: newProduct, error: insertError } = await supabase
           .from('products')

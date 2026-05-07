@@ -142,7 +142,6 @@ export default function POSPage() {
         total={saleResult.total}
         customerPhone={saleResult.customerPhone}
         onNewSale={handleSaleSuccessClose}
-        onViewInvoice={handleSaleSuccessClose}
       />
     );
   }

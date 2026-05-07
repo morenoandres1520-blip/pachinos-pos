@@ -7,6 +7,8 @@ import {
   ArrowLeftRight,
   Smartphone,
   X,
+  ChevronUp,
+  ChevronDown,
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';

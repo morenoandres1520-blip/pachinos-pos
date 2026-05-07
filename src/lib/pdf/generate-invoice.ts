@@ -157,7 +157,8 @@ export function generateInvoicePDF(
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  y = (doc as any).lastAutoTable.finalY + 4;
+  const lastTable = (doc as any).lastAutoTable;
+  y = lastTable ? lastTable.finalY + 4 : y + 20;
   y = drawSeparator(doc, y);
 
   // --- Totals ---
@@ -209,6 +210,19 @@ export function generateInvoicePDF(
 
   y += 2;
   y = drawSeparator(doc, y);
+
+  // --- Notes ---
+  if (sale.notes) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.text('Notas:', MARGIN, y);
+    y += 9;
+    doc.setFont('helvetica', 'normal');
+    const noteLines = doc.splitTextToSize(sale.notes, CONTENT_WIDTH);
+    doc.text(noteLines, MARGIN, y);
+    y += noteLines.length * 8 + 4;
+    y = drawSeparator(doc, y);
+  }
 
   // --- Footer ---
   if (businessConfig.footer_message) {

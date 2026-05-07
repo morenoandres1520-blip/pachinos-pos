@@ -306,7 +306,7 @@ function VoidDialog({ sale, open, onOpenChange, onConfirm, loading }: VoidDialog
               e.preventDefault();
               handleConfirm();
             }}
-            disabled={loading}
+            disabled={loading || !reason.trim()}
           >
             {loading ? (
               <Loader2 className="size-4 animate-spin mr-2" />
@@ -581,6 +581,16 @@ export default function SalesPage() {
   };
 
   const confirmVoid = async (saleId: string, reason: string) => {
+    if (!reason.trim()) {
+      toast.error('El motivo de anulación es obligatorio');
+      return;
+    }
+    const target = sales.find((s) => s.id === saleId);
+    if (target?.status === 'anulada') {
+      toast.error('Esta venta ya fue anulada');
+      setVoidOpen(false);
+      return;
+    }
     setVoidLoading(true);
     try {
       // 1. Fetch the sale items to know what stock to restore

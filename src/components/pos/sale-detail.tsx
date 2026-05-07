@@ -1,7 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Printer, Share2, XCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Download, Share2, XCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import { generateInvoicePDF } from '@/lib/pdf/generate-invoice';
+import type { BusinessConfig } from '@/types/database';
 import {
   Sheet,
   SheetContent,
@@ -32,6 +36,33 @@ interface SaleDetailProps {
 
 export function SaleDetail({ sale, open, onOpenChange }: SaleDetailProps) {
   const isVoided = sale?.status === 'anulada';
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!sale) return;
+    setDownloadingPdf(true);
+    try {
+      const supabase = createClient();
+      const { data: config } = await supabase
+        .from('business_config')
+        .select('*')
+        .limit(1)
+        .single();
+      if (!config) throw new Error('Sin configuración');
+      const doc = generateInvoicePDF(
+        sale,
+        config as BusinessConfig,
+        sale.items ?? [],
+        sale.payments ?? [],
+        sale.user?.full_name ?? ''
+      );
+      doc.save(`${sale.invoice_number}.pdf`);
+    } catch {
+      toast.error('No se pudo generar el PDF');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const whatsappMessage = useMemo(() => {
     if (!sale) return '';
@@ -220,12 +251,13 @@ export function SaleDetail({ sale, open, onOpenChange }: SaleDetailProps) {
           <Button
             variant="outline"
             className="flex-1 min-h-[44px]"
-            onClick={() => {
-              window.print();
-            }}
+            onClick={handleDownloadPDF}
+            disabled={downloadingPdf}
           >
-            <Printer className="size-4 mr-2" />
-            Reimprimir Factura
+            {downloadingPdf
+              ? <Loader2 className="size-4 mr-2 animate-spin" />
+              : <Download className="size-4 mr-2" />}
+            {downloadingPdf ? 'Generando…' : 'Descargar PDF'}
           </Button>
           <Button
             variant="outline"

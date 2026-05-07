@@ -20,10 +20,11 @@ export function useAuth() {
   const supabase = createClient();
 
   useEffect(() => {
+    let mounted = true;
+
     const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!mounted) return;
 
       if (user) {
         const { data: profile } = await supabase
@@ -31,7 +32,7 @@ export function useAuth() {
           .select('*')
           .eq('id', user.id)
           .single();
-
+        if (!mounted) return;
         setState({ user, profile, loading: false });
       } else {
         setState({ user: null, profile: null, loading: false });
@@ -40,23 +41,27 @@ export function useAuth() {
 
     getUser();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        setState({ user: session.user, profile, loading: false });
-      } else {
-        setState({ user: null, profile: null, loading: false });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          if (!mounted) return;
+          setState({ user: session.user, profile, loading: false });
+        } else {
+          setState({ user: null, profile: null, loading: false });
+        }
       }
-    });
+    );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

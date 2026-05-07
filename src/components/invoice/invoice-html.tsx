@@ -144,6 +144,15 @@ export function InvoiceHtml({
 
       <hr className="border-black border-dashed my-2" />
 
+      {/* Notes */}
+      {sale.notes && (
+        <>
+          <hr className="border-black border-dashed my-2" />
+          <p className="font-bold mb-0.5">Notas:</p>
+          <p className="text-[10px]">{sale.notes}</p>
+        </>
+      )}
+
       {/* Footer */}
       {business.footer_message && (
         <p className="text-center text-[9px] mb-1">{business.footer_message}</p>
